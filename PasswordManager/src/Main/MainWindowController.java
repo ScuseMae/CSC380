@@ -18,6 +18,11 @@ import javafx.stage.WindowEvent;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+
+import java.util.Timer;
+import java.util.TimerTask;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -204,11 +209,39 @@ public class MainWindowController {
 
         //copying password to clipboard
         String copyPassword = selected.getPassword();
-        final Clipboard clipboard = Clipboard.getSystemClipboard();
-        final ClipboardContent content = new ClipboardContent();
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        ClipboardContent content = new ClipboardContent();
         content.putString(copyPassword);
         clipboard.setContent(content);
-
+        
+        //clear clipboard after 30 seconds
+        clearClipboardTimer();
+    }
+    
+    private void clearClipboardTimer()
+    {
+    	Timer timer = new Timer();
+    	TimerTask task = new TimerTask()
+    	{
+    		int secondsPassed = 0;
+    		
+    		public void run()
+    		{
+    			secondsPassed++;
+    			System.out.println("Seconds Passed: " + secondsPassed);
+    			
+    			if (secondsPassed == 30)
+    			{
+    				timer.cancel();
+    		    	Toolkit toolkit = Toolkit.getDefaultToolkit();
+    		    	java.awt.datatransfer.Clipboard clipboard = toolkit.getSystemClipboard();
+    		    	StringSelection strClear = new StringSelection(" ");
+    		    	clipboard.setContents(strClear, null);
+    			}
+    		}
+    	};
+    	
+    	timer.scheduleAtFixedRate(task, 0, 1000);
     }
 
     @FXML
