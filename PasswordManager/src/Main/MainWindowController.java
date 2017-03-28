@@ -8,6 +8,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
@@ -51,8 +52,8 @@ public class MainWindowController {
 
           public static Account accountToAdd;
 
-
-
+          Timer timer = new Timer();
+          
     //Constructor
     @FXML
     public void initialize() throws InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, IllegalBlockSizeException, NoSuchPaddingException {
@@ -195,11 +196,22 @@ public class MainWindowController {
         loadBar.setProgress(0.6);
 
         //copying username to clipboard
-        String copyUsername = selected.getUserName();
-        final Clipboard clipboard = Clipboard.getSystemClipboard();
-        final ClipboardContent content = new ClipboardContent();
-        content.putString(copyUsername);
-        clipboard.setContent(content);
+        if (selected != null)
+        {
+        	String copyUsername = selected.getUserName();
+        	final Clipboard clipboard = Clipboard.getSystemClipboard();
+        	final ClipboardContent content = new ClipboardContent();
+        	content.putString(copyUsername);
+        	clipboard.setContent(content);
+        }
+        else
+        {
+        	Alert alert = new Alert(AlertType.INFORMATION);
+        	alert.setTitle("No User Name Selected");
+        	alert.setHeaderText(null);
+        	alert.setContentText("Sorry, No User Name Has Been Selected, Try Again.");
+        	alert.showAndWait();
+        }
 
     }
 
@@ -208,17 +220,28 @@ public class MainWindowController {
         Account selected = (Account)table.getSelectionModel().getSelectedItem();
 
         //copying password to clipboard
-        String copyPassword = selected.getPassword();
-        Clipboard clipboard = Clipboard.getSystemClipboard();
-        ClipboardContent content = new ClipboardContent();
-        content.putString(copyPassword);
-        clipboard.setContent(content);
-        
-        //clear clipboard after 30 seconds
-        clearClipboardTimer();
+        if (selected != null)
+        {
+        	String copyPassword = selected.getPassword();
+        	Clipboard clipboard = Clipboard.getSystemClipboard();
+        	ClipboardContent content = new ClipboardContent();
+        	content.putString(copyPassword);
+        	clipboard.setContent(content);
+        	
+			//clear clipboard after 30 seconds
+            clipboardTimer();
+        }
+        else
+        {
+        	Alert alert = new Alert(AlertType.INFORMATION);
+        	alert.setTitle("No Password Selected");
+        	alert.setHeaderText(null);
+        	alert.setContentText("Sorry, No Password Has Been Selected, Try Again.");
+        	alert.showAndWait();
+        }
     }
     
-    private void clearClipboardTimer()
+    private void clipboardTimer()
     {
     	Timer timer = new Timer();
     	TimerTask task = new TimerTask()
@@ -233,15 +256,21 @@ public class MainWindowController {
     			if (secondsPassed == 30)
     			{
     				timer.cancel();
-    		    	Toolkit toolkit = Toolkit.getDefaultToolkit();
-    		    	java.awt.datatransfer.Clipboard clipboard = toolkit.getSystemClipboard();
-    		    	StringSelection strClear = new StringSelection(" ");
-    		    	clipboard.setContents(strClear, null);
+    				clearClipboard();
     			}
     		}
     	};
     	
     	timer.scheduleAtFixedRate(task, 0, 1000);
+    }
+    
+    private void clearClipboard()
+    {
+    	timer.purge();
+    	Toolkit toolkit = Toolkit.getDefaultToolkit();
+    	java.awt.datatransfer.Clipboard clipboard = toolkit.getSystemClipboard();
+    	StringSelection strClear = new StringSelection(" ");
+    	clipboard.setContents(strClear, null);
     }
 
     @FXML
@@ -251,6 +280,7 @@ public class MainWindowController {
 
     @FXML
     private void lockButtonPressed(){
+    	clearClipboard();
         try {
             Main.fileManager.save();
             Main.fileManager.resetPassword();
